@@ -1,25 +1,21 @@
-name: Test Telegram
+import os
+import requests
 
-on:
-  workflow_dispatch:   # déclenchement manuel depuis l'interface GitHub
+TOKEN = os.environ["TELEGRAM_TOKEN"]
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
-jobs:
-  send-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v4
+url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+payload = {
+    "chat_id": CHAT_ID,
+    "text": "🔥 *MEME RADAR AI* est en ligne. Test via GitHub Actions réussi !",
+    "parse_mode": "Markdown",
+}
 
-      - name: Installer Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+print("Envoi en cours...")
+r = requests.post(url, json=payload, timeout=10)
 
-      - name: Installer les dépendances
-        run: pip install requests
-
-      - name: Lancer le test Telegram
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python test_telegram.py
+if r.status_code == 200 and r.json().get("ok"):
+    print("✅ Message envoyé avec succès sur Telegram !")
+else:
+    print("❌ Échec :", r.status_code, r.text)
+    raise SystemExit(1)
